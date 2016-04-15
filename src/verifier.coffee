@@ -1,6 +1,6 @@
 _ = require 'lodash'
 async = require 'async'
-MeshbluXmpp = require 'meshblu-xmpp'
+MeshbluAmqp = require 'meshblu-amqp'
 xml2js = require('xml2js').parseString
 
 class Verifier
@@ -8,7 +8,7 @@ class Verifier
     @nonce ?= Date.now()
 
   _connect: (callback) =>
-    @meshblu = new MeshbluXmpp @meshbluConfig
+    @meshblu = new MeshbluAmqp @meshbluConfig
     @meshblu.connect callback
 
   _message: (callback) =>

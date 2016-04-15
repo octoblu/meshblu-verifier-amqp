@@ -1,7 +1,7 @@
 {
-  "name": "meshblu-verifier-xmpp",
-  "version": "1.1.0",
-  "description": "Verify Meshblu over xmpp",
+  "name": "meshblu-verifier-amqp",
+  "version": "1.0.0",
+  "description": "Verify Meshblu over amqp",
   "main": "index.js",
   "scripts": {
     "start": "node command.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/octoblu/meshblu-verifier-xmpp.git"
+    "url": "git+https://github.com/octoblu/meshblu-verifier-amqp.git"
   },
   "keywords": [
     "meshblu"
@@ -17,9 +17,9 @@
   "author": "Octoblu <npm@octoblu.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/octoblu/meshblu-verifier-xmpp/issues"
+    "url": "https://github.com/octoblu/meshblu-verifier-amqp/issues"
   },
-  "homepage": "https://github.com/octoblu/meshblu-verifier-xmpp#readme",
+  "homepage": "https://github.com/octoblu/meshblu-verifier-amqp#readme",
   "devDependencies": {
     "chai": "^3.5.0",
     "coffee-coverage": "^0.7.0",
@@ -29,7 +29,6 @@
     "ltx": "^2.3.0",
     "mocha": "^2.4.5",
     "mocha-istanbul": "^0.2.0",
-    "node-xmpp-server": "^2.1.2",
     "shmock": "^0.7.2",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0",
@@ -40,7 +39,7 @@
     "coffee-script": "^1.10.0",
     "commander": "^2.9.0",
     "lodash": "^3.10.1",
-    "meshblu-config": "^3.1.1",
-    "meshblu-xmpp": "^1.3.0"
+    "meshblu-amqp": "^1.2.1",
+    "meshblu-config": "^3.1.1"
   }
 }

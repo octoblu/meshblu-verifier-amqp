@@ -1,6 +1,6 @@
 _           = require 'lodash'
 commander   = require 'commander'
-debug       = require('debug')('meshblu-verifier-xmpp:command')
+debug       = require('debug')('meshblu-verifier-amqp:command')
 packageJSON = require './package.json'
 Verifier    = require './src/verifier'
 MeshbluConfig = require 'meshblu-config'
@@ -21,17 +21,17 @@ class Command
     verifier = new Verifier {meshbluConfig}
     verifier.verify (error) =>
       @die error if error?
-      console.log 'meshblu-verifier-xmpp successful'
+      console.log 'meshblu-verifier-amqp successful'
       process.exit 0
 
   die: (error) =>
     return process.exit(0) unless error?
-    console.log 'meshblu-verifier-xmpp error'
+    console.log 'meshblu-verifier-amqp error'
     console.error error.stack
     process.exit 1
 
   timeoutAndDie: =>
-    console.log 'meshblu-verifier-xmpp timeout'
+    console.log 'meshblu-verifier-amqp timeout'
     @die new Error 'Timeout Exceeded'
 
 

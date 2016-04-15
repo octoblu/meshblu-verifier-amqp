@@ -1,10 +1,10 @@
 shmock = require 'shmock'
 Verifier = require '../src/verifier'
-MockMeshbluXmpp = require './mock-meshblu-xmpp'
+MockMeshbluAmqp = require './mock-meshblu-amqp'
 xml2js = require('xml2js').parseString
 ltx = require 'ltx'
 jsontoxml = require 'jsontoxml'
-xmpp = require 'node-xmpp-server'
+# amqp = require 'node-amqp-server'
 
 describe 'Verifier', ->
   beforeEach (done) ->
@@ -17,12 +17,12 @@ describe 'Verifier', ->
     onConnection = (client) =>
       _sendResponse = ({request, response}) =>
         responseNode = ltx.parse jsontoxml {response}
-        client.send new xmpp.Stanza('iq',
-          type: 'result'
-          to: request.attrs.from
-          from: request.attrs.to
-          id: request.attrs.id
-        ).cnode responseNode
+        # client.send new amqp.Stanza('iq',
+        #   type: 'result'
+        #   to: request.attrs.from
+        #   from: request.attrs.to
+        #   id: request.attrs.id
+        # ).cnode responseNode
 
       onStanza = (request) =>
         if request.name == 'message'
@@ -42,15 +42,15 @@ describe 'Verifier', ->
 
           if job.metadata.jobType == 'SendMessage'
             @messageHandler job, (response) =>
-              client.send new xmpp.Stanza('message',
-                to: 'some-device@meshblu.octoblu.com'
-                from: 'meshblu.octoblu.com'
-                type: 'normal'
-              ).cnode(ltx.parse """
-                <metadata />
-              """).up().cnode(ltx.parse """
-                <raw-data>#{response.rawData}</raw-data>
-              """)
+              # client.send new amqp.Stanza('message',
+              #   to: 'some-device@meshblu.octoblu.com'
+              #   from: 'meshblu.octoblu.com'
+              #   type: 'normal'
+              # ).cnode(ltx.parse """
+              #   <metadata />
+              # """).up().cnode(ltx.parse """
+              #   <raw-data>#{response.rawData}</raw-data>
+              # """)
 
               return _sendResponse {request, response}
 
@@ -58,7 +58,7 @@ describe 'Verifier', ->
       client.on 'authenticate', (opts, callback) =>
         callback(null, opts)
 
-    @meshblu = new MockMeshbluXmpp port: 0xd00d, onConnection: onConnection
+    @meshblu = new MockMeshbluAmqp port: 0xd00d, onConnection: onConnection
     @meshblu.start done
 
   afterEach (done) ->

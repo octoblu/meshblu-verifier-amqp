@@ -1,12 +1,12 @@
 http = require 'http'
-xmpp = require 'node-xmpp-server'
+# amqp = require 'node-amqp-server'
 
-class MockMeshbluXmpp
+class MockMeshbluAmqp
   constructor: (options) ->
     {@onConnection, @port} = options
 
   start: (callback) =>
-    @server = new xmpp.C2S.TCPServer
+    @server = new amqp.C2S.TCPServer
       port: 0xd00d
       domain: 'localhost'
 
@@ -20,4 +20,4 @@ class MockMeshbluXmpp
   _onConnection: (client) =>
     @onConnection client
 
-module.exports = MockMeshbluXmpp
+module.exports = MockMeshbluAmqp
