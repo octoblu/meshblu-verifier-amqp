@@ -5,39 +5,28 @@ xml2js = require('xml2js').parseString
 
 class Verifier
   constructor: ({@meshbluConfig, @onError, @nonce}) ->
-    console.log {@meshbluConfig}
     @nonce ?= Date.now()
 
   _connect: (callback) =>
     @meshblu = new MeshbluAmqp @meshbluConfig
-    console.log 'connecting...'
     @meshblu.connect (error) =>
-      console.log 'connected!'
       return callback(error) if error?
       @_firehose callback
 
   _firehose: (callback) =>
-    @meshblu.connectFirehose (error, @firehose) =>
-      setTimeout =>
-        console.log 'the firehose is alive!'
-        callback()
-      , 1000
+    @meshblu.connectFirehose callback
 
   _message: (callback) =>
-
-    @meshblu.on 'message', ({data}) =>
-      console.log 'got a message!',{data}
+    @meshblu.once 'message', ({rawData}) =>
+      data = JSON.parse rawData
       return callback new Error 'wrong message received' unless data?.payload == @nonce
       callback()
-
 
     message =
       devices: [@meshbluConfig.uuid]
       payload: @nonce
 
-    console.log 'sending message', {message}
     @meshblu.message message, =>
-      console.log 'sent'
   # _register: (callback) =>
   #   @_connect()
   #   @meshblu.connect (error) =>
@@ -89,10 +78,11 @@ class Verifier
       # @_register
       @_whoami
       @_message
-      @_update
+      # @_update
       # @_unregister
     ], (error) =>
-      @meshblu.close()
+      @meshblu.disconnectFirehose =>
+        @meshblu.close()
       callback error
 
 module.exports = Verifier
