@@ -17,8 +17,7 @@ class Verifier
     @meshblu.connectFirehose callback
 
   _message: (callback) =>
-    @meshblu.once 'message', ({rawData}) =>
-      data = JSON.parse rawData
+    @meshblu.once 'message', ({data}) =>
       return callback new Error 'wrong message received' unless data?.payload == @nonce
       callback()
 

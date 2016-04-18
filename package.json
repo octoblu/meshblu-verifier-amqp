@@ -1,6 +1,6 @@
 {
   "name": "meshblu-verifier-amqp",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Verify Meshblu over amqp",
   "main": "index.js",
   "scripts": {
@@ -39,7 +39,7 @@
     "coffee-script": "^1.10.0",
     "commander": "^2.9.0",
     "lodash": "^3.10.1",
-    "meshblu-amqp": "^1.2.1",
+    "meshblu-amqp": "^1.4.0",
     "meshblu-config": "^3.1.1"
   }
 }
