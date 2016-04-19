@@ -1,8 +1,8 @@
-_ = require 'lodash'
-async = require 'async'
+_           = require 'lodash'
+async       = require 'async'
 MeshbluAmqp = require 'meshblu-amqp'
-xml2js = require('xml2js').parseString
-debug = require('debug')('meshblu-verifier-amqp')
+xml2js      = require('xml2js').parseString
+debug       = require('debug')('meshblu-verifier-amqp')
 
 class Verifier
   constructor: ({@meshbluConfig, @onError, @nonce}) ->
@@ -15,6 +15,10 @@ class Verifier
       debug '+ connected'
       return callback(error) if error?
       @_firehose callback
+
+  _close: (callback) =>
+    debug '+ close'
+    @meshblu.close callback
 
   _firehose: (callback) =>
     debug '+ firehose'
@@ -31,25 +35,7 @@ class Verifier
       payload: @nonce
 
     @meshblu.message message, =>
-  # _register: (callback) =>
-  #   @_connect()
-  #   @meshblu.connect (error) =>
-  #     return callback error if error?
-  #
-  #     @meshblu.once 'error', (data) =>
-  #       callback new Error data
-  #
-  #     @meshblu.once 'registered', (data) =>
-  #       @device = data
-  #       @meshbluConfig.uuid = @device.uuid
-  #       @meshbluConfig.token = @device.token
-  #       @meshblu.close()
-  #       @_connect()
-  #       @meshblu.connect (error) =>
-  #         return callback error if error?
-  #         callback()
-  #
-  #     @meshblu.register type: 'meshblu:verifier'
+
   _subscribeSelf: (callback) =>
     debug '+ subscribeSelf'
     subscription =
@@ -104,30 +90,32 @@ class Verifier
         whoamiValid = true
         callback null, whoami if configMessageValid
 
-  # _unregister: (callback) =>
-  #   return callback() unless @device?
-  #   @meshblu.once 'unregistered', (data) =>
-  #     callback null, data
-  #
-  #   @meshblu.removeAllListeners 'error'
-  #   @meshblu.once 'error', (data) =>
-  #     callback new Error data
-  #
-  #   @meshblu.unregister @device
+  _register: (callback) =>
+    debug '+ register'
+    @meshblu.register type: 'meshblu:verifier', (error, device) =>
+      debug {uuid: device.uuid, token: device.token}
+      return callback new Error 'missing registered uuid & token' unless device?.uuid? and device?.token?
+      @meshbluConfig.uuid = device.uuid
+      @meshbluConfig.token = device.token
+      callback()
+
+  _unregister: (callback) =>
+    debug '+ unregister'
+    @meshblu.unregister @meshbluConfig.uuid, callback
 
   verify: (callback) =>
     async.series [
       @_connect
+      @_register
+      @_close
+      @_connect
       @_subscribeSelf
-      # @_register
       @_whoami
       @_message
       @_subscribeConfig
       @_update
-      # @_unregister
+      @_unregister
     ], (error) =>
-      @meshblu.disconnectFirehose =>
-        @meshblu.close()
-      callback error
+      @_close callback
 
 module.exports = Verifier
