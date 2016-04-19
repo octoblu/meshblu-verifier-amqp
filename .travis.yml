@@ -1,11 +1,21 @@
+sudo: required
 language: node_js
 node_js:
 - '5'
+services:
+- rabbitmq
 addons:
   code_climate:
     repo_token: 919f23005f215de7e74cf0af258aba3a242cc64684810f7151ad6a26172caba5
 before_script:
 - npm install -g codeclimate-test-reporter
+- sudo rabbitmq-plugins enable rabbitmq_amqp1_0
+- sudo rabbitmqctl add_user meshblu judgementday
+- sudo rabbitmqctl set_permissions meshblu ".*" ".*" ".*"
+- sudo rabbitmqctl add_user some-uuid some-token
+- sudo rabbitmqctl set_permissions some-uuid '^(amq\.gen.*|amq\.default|^some-uuid.*)$' '.*' '.*'
+- sudo rabbitmqctl add_user a-new-uuid lol-a-token
+- sudo rabbitmqctl set_permissions a-new-uuid '^(amq\.gen.*|amq\.default|^a-new-uuid.*)$' '.*' '.*'
 after_script:
 - codeclimate-test-reporter < coverage/lcov.info
 deploy:
