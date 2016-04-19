@@ -26,7 +26,10 @@ class Verifier
 
   _message: (callback) =>
     debug '+ message'
-    @meshblu.once 'message', ({data}) =>
+    @meshblu.once 'message', (message) =>
+      {data} = message
+      debug '+ message received'
+      debug {message}
       return callback new Error 'wrong message received' unless data?.payload == @nonce
       callback()
 
@@ -65,6 +68,13 @@ class Verifier
       return callback new Error 'whoami failed' unless device.uuid == @meshbluConfig.uuid
       callback error
 
+  _whoamiNull: (callback) =>
+    debug '+ whoami = null ?'
+    @meshblu.whoami (error, device) =>
+      debug {error, device}
+      return callback new Error 'whoami failed' unless !device?
+      callback error
+
   _update: (callback) =>
     debug '+ update'
     params =
@@ -75,20 +85,21 @@ class Verifier
     configMessageValid = false
 
     @meshblu.once 'message', ({data}) =>
-      debug '+ update message'
+      debug '+ got update message'
       debug {data}
       return callback new Error 'wrong config message received' unless data?.nonce == @nonce
       configMessageValid = true
-      callback null, data if whoamiValid
+      callback null if whoamiValid
 
     @meshblu.update @meshbluConfig.uuid, params, (error) =>
       return callback error if error?
+      debug '+ update sent'
       @meshblu.whoami (error, whoami) =>
-        debug '+ whoami'
+        debug '+ got whoami'
         debug {whoami}
         return callback new Error 'update failed whoami check' unless whoami?.nonce == @nonce
         whoamiValid = true
-        callback null, whoami if configMessageValid
+        callback error if configMessageValid
 
   _register: (callback) =>
     debug '+ register'
@@ -97,7 +108,7 @@ class Verifier
       return callback new Error 'missing registered uuid & token' unless device?.uuid? and device?.token?
       @meshbluConfig.uuid = device.uuid
       @meshbluConfig.token = device.token
-      callback()
+      callback error
 
   _unregister: (callback) =>
     debug '+ unregister'
@@ -115,7 +126,9 @@ class Verifier
       @_subscribeConfig
       @_update
       @_unregister
+      @_whoamiNull
     ], (error) =>
-      @_close callback
+      @_close =>
+        callback(error)
 
 module.exports = Verifier
