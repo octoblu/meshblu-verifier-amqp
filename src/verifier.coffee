@@ -2,7 +2,7 @@ _           = require 'lodash'
 async       = require 'async'
 MeshbluAmqp = require 'meshblu-amqp'
 xml2js      = require('xml2js').parseString
-debug       = require('debug')('meshblu-verifier-amqp')
+debug       = require('debug')('meshblu-verifier-amqp:verifier')
 
 class Verifier
   constructor: ({@meshbluConfig, @onError, @nonce}) ->
@@ -38,6 +38,7 @@ class Verifier
       payload: @nonce
 
     @meshblu.message message, =>
+      debug "+ message sent"
 
   _subscribeSelf: (callback) =>
     debug '+ subscribeSelf'
@@ -84,9 +85,10 @@ class Verifier
     whoamiValid = false
     configMessageValid = false
 
-    @meshblu.once 'message', ({data}) =>
+    @meshblu.once 'message', (message) =>
+      {data} = message
       debug '+ got update message'
-      debug {data}
+      debug {message}
       return callback new Error 'wrong config message received' unless data?.nonce == @nonce
       configMessageValid = true
       callback null if whoamiValid
