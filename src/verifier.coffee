@@ -45,6 +45,18 @@ class Verifier
   #         callback()
   #
   #     @meshblu.register type: 'meshblu:verifier'
+  _subscribe: (callback) =>
+    subscription =
+      emitterUuid: @meshbluConfig.uuid
+      subscriberUuid: @meshbluConfig.uuid
+      type: 'message.received'
+
+    @meshblu.subscribe @meshbluConfig.uuid, subscription, callback
+
+  _whoami: (callback) =>
+    @meshblu.whoami (error, device) =>
+      return callback new Error 'whoami failed' unless device.uuid == @meshbluConfig.uuid
+      callback error
 
   _update: (callback) =>
     params =
@@ -56,9 +68,6 @@ class Verifier
       @meshblu.whoami (error, data) =>
         return callback new Error 'update failed' unless data?.nonce == @nonce
         callback null, data
-
-  _whoami: (callback) =>
-    @meshblu.whoami callback
 
   # _unregister: (callback) =>
   #   return callback() unless @device?
@@ -74,10 +83,11 @@ class Verifier
   verify: (callback) =>
     async.series [
       @_connect
+      @_subscribe
       # @_register
       @_whoami
       @_message
-      # @_update
+      @_update
       # @_unregister
     ], (error) =>
       @meshblu.disconnectFirehose =>
