@@ -66,9 +66,12 @@ class Verifier
     subscription =
       emitterUuid: @meshbluConfig.uuid
       subscriberUuid: @meshbluConfig.uuid
-      type: 'configure.received'
+      type: 'configure.sent'
 
-    @meshblu.subscribe @meshbluConfig.uuid, subscription, callback
+    @meshblu.subscribe @meshbluConfig.uuid, subscription, (error) =>
+      return callback error if error?
+      subscription.type = 'configure.received'
+      @meshblu.subscribe @meshbluConfig.uuid, subscription, callback
 
   _whoami: (callback) =>
     debug '+ whoami'
