@@ -18,26 +18,38 @@ describe 'Verifier', ->
     @sut = new Verifier {meshbluConfig, @nonce}
 
   beforeEach ->
+    @updatedDevice = @registeredDevice = uuid:'a-new-uuid', token:'lol-a-token'
+    @updatedDevice.nonce = @sut.nonce
+
     @amqp = sinon.stub()
-    updatedDevice = registeredDevice = uuid:'a-new-uuid', token:'lol-a-token'
-    updatedDevice.nonce = @sut.nonce
+
+    @responses =
+      registerDevice: @registeredDevice
+      unregisterDevice: 'null'
+      createSubscription: 'null'
+      sendMessage: 'null'
+      updateDevice: 'null'
+      getDeviceFirst: @registeredDevice
+      getDeviceSecond: @updatedDevice
+      getDeviceThird: 'null'
+
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'RegisterDevice')
-      .yields null, registeredDevice
+      .yields null, 'registerDevice'
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'UnregisterDevice')
-      .yields null, null
+      .yields null, 'unregisterDevice'
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'CreateSubscription')
-      .yields null, null
+      .yields null, 'createSubscription'
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'SendMessage')
-      .yields null, null
+      .yields null, 'sendMessage'
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'UpdateDevice')
-      .yields null, null
+      .yields null, 'updateDevice'
     @amqp.withArgs(sinon.match applicationProperties: jobType: 'GetDevice')
       .onFirstCall()
-      .yields null, registeredDevice
+      .yields null, 'getDeviceFirst'
       .onSecondCall()
-      .yields null, updatedDevice
+      .yields null, 'getDeviceSecond'
       .onThirdCall()
-      .yields null, 'null'
+      .yields null, 'getDeviceThird'
 
     @receiver.on 'message', (@message) =>
       debug JSON.stringify(message: {
@@ -52,7 +64,8 @@ describe 'Verifier', ->
           applicationProperties:
             code: 200
 
-        @amqp @message, (error, response) =>
+        @amqp @message, (error, responseKey) =>
+          response = @responses[responseKey]
           debug sendResponse: {error, response}
           sender.send response, options
 
@@ -61,7 +74,9 @@ describe 'Verifier', ->
             properties:
               subject: @sut.meshblu.firehoseQueueName
           debug sendMessage: {options}
-          sender.send @message.body, options
+          response = @responses.sendMessageResponse
+          response ?= @message.body
+          sender.send response, options
 
         if @message.applicationProperties.jobType == 'UpdateDevice'
           options =
@@ -69,11 +84,12 @@ describe 'Verifier', ->
               subject: @sut.meshblu.firehoseQueueName
           message = nonce: @nonce
           debug {message, options}
-          sender.send JSON.stringify(message), options
+          response = @responses.updateDeviceResponse
+          response ?= JSON.stringify(message)
+          sender.send response, options
 
   describe '-> verify', ->
     context 'when everything works', ->
-
       beforeEach (done) ->
         @sut.verify (@error) =>
           done @error
@@ -81,75 +97,56 @@ describe 'Verifier', ->
       it 'should not error', ->
         expect(@error).not.to.exist
 
-    xcontext 'when register fails', ->
+    context 'when register fails', ->
       beforeEach (done) ->
-        @registerHandler.yields error: 'something wrong'
-
+        @responses.registerDevice = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
-        expect(@registerHandler).to.be.called
 
-    xcontext 'when whoami fails', ->
+    context 'when first whoami after register fails', ->
       beforeEach (done) ->
-        @registerHandler.yields uuid: 'some-device'
-        @whoamiHandler.yields error: 'something wrong'
-
+        @responses.getDeviceFirst = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
-        expect(@registerHandler).to.be.called
-        expect(@whoamiHandler).to.be.called
 
-    xcontext 'when message fails', ->
+    context 'when second whoami after update fails', ->
       beforeEach (done) ->
-        @registerHandler.yields uuid: 'some-device'
-        @whoamiHandler.yields uuid: 'some-device', type: 'meshblu:verifier'
-        @messageHandler.yields null
-
+        @responses.getDeviceSecond = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
-        expect(@registerHandler).to.be.called
-        expect(@whoamiHandler).to.be.called
-        expect(@messageHandler).to.be.called
 
-    xcontext 'when update fails', ->
+    context 'when third whoami after unregister fails', ->
       beforeEach (done) ->
-        @registerHandler.yields uuid: 'some-device'
-        @whoamiHandler.yields uuid: 'some-device', type: 'meshblu:verifier'
-        @messageHandler.yields payload: @nonce
-        @updateHandler.yields error: 'something wrong'
-
+        @responses.getDeviceThird = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
-        expect(@registerHandler).to.be.called
-        expect(@whoamiHandler).to.be.called
-        expect(@updateHandler).to.be.called
 
-    xcontext 'when unregister fails', ->
+    context 'when message fails', ->
       beforeEach (done) ->
-        @registerHandler.yields uuid: 'some-device'
-        @whoamiHandler.yields uuid: 'some-device', type: 'meshblu:verifier'
-        @messageHandler.yields payload: @nonce
-        @updateHandler.yields nonce: @nonce
-        @unregisterHandler.yields error: 'something wrong'
-
+        @responses.sendMessageResponse = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
-        expect(@registerHandler).to.be.called
-        expect(@whoamiHandler).to.be.called
-        expect(@updateHandler).to.be.called
-        expect(@unregisterHandler).to.be.called
+
+    context 'when update fails', ->
+      beforeEach (done) ->
+        @updatedDevice.nonce = 0
+        @sut.verify (@error) =>
+          done()
+
+      it 'should error', ->
+        expect(@error).to.exist
