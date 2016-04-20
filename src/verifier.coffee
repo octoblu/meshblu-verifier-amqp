@@ -30,7 +30,7 @@ class Verifier
       {data} = message
       debug '+ message received'
       debug {message}
-      return callback new Error 'wrong message received' unless data?.payload == @nonce
+      return callback new Error 'nonce in message does not match' unless data?.payload == @nonce
       callback()
 
     message =
@@ -73,7 +73,7 @@ class Verifier
     debug '+ whoami = null ?'
     @meshblu.whoami (error, device) =>
       debug {error, device}
-      return callback new Error 'whoami failed' unless !device?
+      return callback new Error 'whoami is not null' unless !device?
       callback error
 
   _update: (callback) =>
@@ -89,7 +89,7 @@ class Verifier
       {data} = message
       debug '+ got update message'
       debug {message}
-      return callback new Error 'wrong config message received' unless data?.nonce == @nonce
+      return callback new Error 'nonce in config does not match' unless data?.nonce == @nonce
       configMessageValid = true
       callback null if whoamiValid
 

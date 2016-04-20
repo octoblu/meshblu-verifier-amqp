@@ -1,6 +1,7 @@
 TestWorker = require './test-worker'
 Verifier   = require '../src/verifier'
 debug      = require('debug')('meshblu-verifier-amqp:test')
+_          = require 'lodash'
 
 describe 'Verifier', ->
   beforeEach (done) ->
@@ -24,32 +25,12 @@ describe 'Verifier', ->
     @amqp = sinon.stub()
 
     @responses =
-      registerDevice: @registeredDevice
-      unregisterDevice: 'null'
-      createSubscription: 'null'
-      sendMessage: 'null'
-      updateDevice: 'null'
-      getDeviceFirst: @registeredDevice
-      getDeviceSecond: @updatedDevice
-      getDeviceThird: 'null'
-
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'RegisterDevice')
-      .yields null, 'registerDevice'
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'UnregisterDevice')
-      .yields null, 'unregisterDevice'
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'CreateSubscription')
-      .yields null, 'createSubscription'
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'SendMessage')
-      .yields null, 'sendMessage'
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'UpdateDevice')
-      .yields null, 'updateDevice'
-    @amqp.withArgs(sinon.match applicationProperties: jobType: 'GetDevice')
-      .onFirstCall()
-      .yields null, 'getDeviceFirst'
-      .onSecondCall()
-      .yields null, 'getDeviceSecond'
-      .onThirdCall()
-      .yields null, 'getDeviceThird'
+      RegisterDevice     : @registeredDevice
+      UnregisterDevice   : 'null'
+      CreateSubscription : 'null'
+      SendMessage        : 'null'
+      UpdateDevice       : 'null'
+      GetDevice          : [ @registeredDevice, @updatedDevice, 'null' ]
 
     @receiver.on 'message', (@message) =>
       debug JSON.stringify(message: {
@@ -64,18 +45,20 @@ describe 'Verifier', ->
           applicationProperties:
             code: 200
 
-        @amqp @message, (error, responseKey) =>
-          response = @responses[responseKey]
-          debug sendResponse: {error, response}
-          sender.send response, options
+        response = @responses[@message.applicationProperties.jobType]
+        response = response.shift() if _.isArray response
+        debug 'response:'
+        debug {response, options}
+        sender.send response, options
 
         if @message.applicationProperties.jobType == 'SendMessage'
           options =
             properties:
               subject: @sut.meshblu.firehoseQueueName
-          debug sendMessage: {options}
-          response = @responses.sendMessageResponse
+          response = @responses['SendMessage-Response']
           response ?= @message.body
+          debug 'sendMessageResponse:'
+          debug {response, options}
           sender.send response, options
 
         if @message.applicationProperties.jobType == 'UpdateDevice'
@@ -83,9 +66,10 @@ describe 'Verifier', ->
             properties:
               subject: @sut.meshblu.firehoseQueueName
           message = nonce: @nonce
-          debug {message, options}
-          response = @responses.updateDeviceResponse
+          response = @responses['UpdateDevice-Response']
           response ?= JSON.stringify(message)
+          debug 'updateDeviceResponse:'
+          debug {response, options}
           sender.send response, options
 
   describe '-> verify', ->
@@ -99,54 +83,60 @@ describe 'Verifier', ->
 
     context 'when register fails', ->
       beforeEach (done) ->
-        @responses.registerDevice = {}
+        @responses.RegisterDevice = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'missing registered uuid & token'
 
     context 'when first whoami after register fails', ->
       beforeEach (done) ->
-        @responses.getDeviceFirst = {}
+        @responses.GetDevice[0] = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'whoami failed'
 
     context 'when second whoami after update fails', ->
       beforeEach (done) ->
-        @responses.getDeviceSecond = {}
+        @responses.GetDevice[1] = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'update failed whoami check'
 
     context 'when third whoami after unregister fails', ->
       beforeEach (done) ->
-        @responses.getDeviceThird = {}
+        @responses.GetDevice[2] = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'whoami is not null'
 
     context 'when message fails', ->
       beforeEach (done) ->
-        @responses.sendMessageResponse = {}
+        @responses['SendMessage-Response'] = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'nonce in message does not match'
 
     context 'when update fails', ->
       beforeEach (done) ->
-        @updatedDevice.nonce = 0
+        @responses['UpdateDevice-Response'] = {}
         @sut.verify (@error) =>
           done()
 
       it 'should error', ->
         expect(@error).to.exist
+        expect(@error.message).to.equals 'nonce in config does not match'
