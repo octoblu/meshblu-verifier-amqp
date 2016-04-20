@@ -18,11 +18,3 @@ before_script:
 - sudo rabbitmqctl set_permissions a-new-uuid '^(amq\.gen.*|amq\.default|^a-new-uuid.*)$' '.*' '.*'
 after_script:
 - codeclimate-test-reporter < coverage/lcov.info
-deploy:
-  provider: npm
-  email: serveradmin@octoblu.com
-  api_key:
-    secure: KUuu+tonQvdyk8Ps07pLS5OKf6vEVi6TJ+QXa75V4nnYimddACLOepNF3XCib2QGgr7FK7/nIip7vxzm0hKNK17szn6/PmLy7OI5zATpx9SbFA6kOyV0FGklqEo5n4nYHGXrJroQUfE9jG5CRUQM+aig6dHl2F8PTbEYL81JiA6iiHUAhex+0plsrF4bUTw+cLOIn1RDjQFkN7tjo/3DECyZfiBkRlr+jfA8XVMrKyyWr8/OxSxU//iTeW2Jey8mXdzTdOS9RxlRHupFAI77MhkSUwhKqyndGbk7EmjnjeJk6NJw5szeA+hKjQMX7zjXCtct+4vG+h45vLDY55Sd9bc0b29Q1Hwrx9V7oqO3HrqdlU6FIRolR1PCD8mzvg2nllhH+Uxft21sPOT/LzEkvNJ4YTxNWj61EjNNtoT2GLFE1tERuM9kL6p4b6mYxiGfd+82ei9SsIqwSr0mZsLLmoNQUBNkCf1/xJPNqt1++fpx1dMbruKKmbLcNULxv6MJ/8WiUvcw2ob84TA6aNVPapwMdOcP4zi9MLk9+9EMXASQXIAQ4Rz6S13SyoN5zH+XrvJZnNyFACnWtQmP4AdNg5/cUWru2md7+rj6QcWAyziN0TQFUrxhcP4BvIOXC1XOjyTOLFgCML7TgpMo/XjwuDKp450dSNJnHpl46FSXz7A=
-  on:
-    tags: true
-    branches: true
