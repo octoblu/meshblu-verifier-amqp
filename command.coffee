@@ -67,6 +67,8 @@ class Command
       json:
         success: !error?
         expires: moment().add(@log_expiration, 'seconds')
+        error:
+          message: error?.message
     }, (httpError) =>
       @die httpError if httpError?
       @die error if error?
