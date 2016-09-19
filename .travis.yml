@@ -1,6 +1,3 @@
-branches:
-  only:
-  - "/^v[0-9]/"
 sudo: required
 language: node_js
 node_js:
@@ -21,3 +18,5 @@ before_script:
 - sudo rabbitmqctl set_permissions a-new-uuid '^(amq\.gen.*|amq\.default|^a-new-uuid.*)$' '.*' '.*'
 after_script:
 - codeclimate-test-reporter < coverage/lcov.info
+after_success:
+- bash <(curl -s https://codecov.io/bash)
