@@ -1,6 +1,6 @@
 {
   "name": "meshblu-verifier-amqp",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Verify Meshblu over amqp",
   "main": "index.js",
   "scripts": {
