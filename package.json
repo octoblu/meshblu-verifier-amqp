@@ -1,11 +1,14 @@
 {
   "name": "meshblu-verifier-amqp",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Verify Meshblu over amqp",
   "main": "index.js",
   "scripts": {
     "start": "node command.js",
-    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul && mocha --reporter json > coverage/mocha.json"
+    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul && mocha --reporter json > coverage/mocha.json",
+    "coverage": "nyc npm test",
+    "mocha:json": "env NPM_ENV=test mocha --reporter json > coverage/mocha.json",
+    "test:watch": "mocha -w -R mocha-multi --reporter-options spec=-,mocha-osx-reporter=-"
   },
   "repository": {
     "type": "git",
@@ -31,7 +34,10 @@
     "mocha-istanbul": "^0.2.0",
     "shmock": "^0.7.2",
     "sinon": "^1.17.3",
-    "sinon-chai": "^2.8.0"
+    "sinon-chai": "^2.8.0",
+    "nyc": "^8.3.0",
+    "mocha-osx-reporter": "^0.1.2",
+    "mocha-multi": "^0.9.1"
   },
   "dependencies": {
     "async": "^1.5.0",
@@ -44,5 +50,16 @@
     "moment": "^2.14.1",
     "request": "^2.74.0",
     "xml2js": "^0.4.17"
+  },
+  "nyc": {
+    "cache": true,
+    "reporter": [
+      "text-summary",
+      "lcov",
+      "json"
+    ],
+    "extension": [
+      ".coffee"
+    ]
   }
 }
