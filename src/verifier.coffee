@@ -18,7 +18,8 @@ class Verifier
 
   _close: (callback) =>
     debug '+ close'
-    @meshblu.close callback
+    @meshblu.disconnectFirehose =>
+      @meshblu.close callback
 
   _firehose: (callback) =>
     debug '+ firehose'

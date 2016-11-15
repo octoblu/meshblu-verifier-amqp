@@ -9,6 +9,7 @@ describe 'Verifier', ->
     @testWorker.connect (error, {@client, @receiver}) =>
       return done error if error?
       done()
+    return # promises
 
   afterEach (done) ->
     @testWorker.close done
