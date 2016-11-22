@@ -123,7 +123,7 @@ class Command
     request.post @log_url, {
       json:
         success: !error?
-        expires: moment().add(@log_expiration, 'seconds')
+        expires: moment().add(@log_expiration, 'seconds').valueOf()
         error:
           message: error?.message
     }, (httpError, response) =>

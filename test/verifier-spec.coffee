@@ -6,7 +6,7 @@ _          = require 'lodash'
 describe 'Verifier', ->
   beforeEach (done) ->
     @testWorker = new TestWorker
-    @testWorker.connect (error, {@client, @receiver}) =>
+    @testWorker.connect (error, {@client, @receiver}={}) =>
       return done error if error?
       done()
     return # promises
