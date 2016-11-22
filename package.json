@@ -1,11 +1,11 @@
 {
   "name": "meshblu-verifier-amqp",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Verify Meshblu over amqp",
   "main": "index.js",
   "scripts": {
     "start": "node command.js",
-    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul && mocha --reporter json > coverage/mocha.json",
+    "test": "mocha",
     "coverage": "nyc npm test",
     "mocha:json": "env NPM_ENV=test mocha --reporter json > coverage/mocha.json",
     "test:watch": "mocha -w -R mocha-multi --reporter-options spec=-,mocha-osx-reporter=-"
